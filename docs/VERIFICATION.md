@@ -46,6 +46,23 @@ Only results that were actually observed are marked passed.
 - `e2e/supabase_sim.py` (production build): 21/21, including restore of an artifact export (4 students, 57 classes,
   6 payments, 4 university classes; totals match, older time record upgraded) and a second account seeing none of the data
 
+## Responsive layout (October 2026 redesign)
+
+Root cause of the empty right-hand area on wide screens: `.main` had `max-width:1280px` but no centring, so it sat at the
+left of the grid track and every extra pixel went to the right (287 px empty at 1763 px wide, 1084 px at 2560 px).
+The page column now fills the space beside the sidebar and is centred at up to 1680 px; pages lay out from the page
+column's width with container queries (home: 1 → 2 → 3 columns). `e2e/layout.py`, before → after:
+
+| Width | Right gap before | Left / right gap after |
+| --- | --- | --- |
+| 1440 | 40 | 35 / 35 |
+| 1763 | 287 | 40 / 40 |
+| 1920 | 444 | 40 / 40 |
+| 2560 | 1084 | 320 / 320 (page capped at 1680 px, centred) |
+| 320 | overflow 27 px | no overflow |
+
+41 problems before, 0 after across 11 widths × empty/sample data × all pages.
+
 ## Not verified (needs real accounts)
 
 Real Supabase RLS, email confirmation and password-reset redirects, realtime sync between devices, Vercel build and

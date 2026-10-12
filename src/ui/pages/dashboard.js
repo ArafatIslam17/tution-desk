@@ -39,32 +39,36 @@ export function vDash() {
     }
   }
   if (!nowPlaced && items.length && items.every(x => toMin(x.start) <= n) && n < 1440) rail += `<div class="now-marker" aria-hidden="true"><span>${fmtT(fromMin(n))}</span><i></i></div>`;
-  const todayPanel = `<section class="panel" aria-labelledby="h-today"><div class="panel-h"><h2 id="h-today">Today's tuition</h2><a class="link" href="#/calendar">Open calendar</a></div><div class="panel-b">
-    ${noStudents ? emptyState('📚', 'No students yet', 'Add your first student to start managing your tuition.', `<button class="btn pri" data-act="new-student">${ic('plus')}Add student</button> <button class="btn ghost" data-act="demo-load">Try with sample data</button>`)
-      : today.length ? `<div class="rail">${rail}</div>` : emptyState('🎉', 'No tuition classes today', uniOn(t).length ? `You're free, apart from ${uniOn(t).length} university class${uniOn(t).length > 1 ? 'es' : ''}.` : "You're free!", `<button class="btn" data-act="new-class">${ic('plus')}Add a class</button>`)}
-  </div></section>`;
+  const uniToday = uniOn(t).length;
+  const todayBody = noStudents
+    ? emptyState('users', 'Set up your tuition desk', 'Add a student with their weekly schedule. Their classes then appear here every day.',
+      `<button class="btn pri" data-act="new-student">${ic('plus')}Add student</button><button class="btn ghost" data-act="demo-load">Try with sample data</button>`,
+      { extra: `<ol class="steps"><li><span><b>Add a student</b>Weekly days, time and monthly fee.</span></li><li><span><b>Add your university timetable</b>Optional. Tuition clashes get flagged.</span></li><li><span><b>Mark classes as Done</b>Teaching time and dues update on their own.</span></li></ol>` })
+    : today.length ? `<div class="rail">${rail}</div>`
+      : emptyState('check', 'No tuition classes today', uniToday ? `You're free, apart from ${uniToday} university class${uniToday > 1 ? 'es' : ''}.` : "You're free today.", `<button class="btn" data-act="new-class">${ic('plus')}Add a class</button>`, { compact: true });
+  const todayPanel = `<section class="panel p-today" aria-labelledby="h-today"><div class="panel-h"><h2 id="h-today">Today's tuition</h2><a class="link" href="#/calendar">Open calendar</a></div><div class="panel-b">${todayBody}</div></section>`;
 
   const up = occurrences(addDays(t, 1), addDays(t, 7)).filter(c => isLive(c)).slice(0, 6);
-  const upPanel = `<section class="panel" aria-labelledby="h-up"><div class="panel-h"><h2 id="h-up">Upcoming tuition</h2><a class="link" href="#/classes">All classes</a></div><div class="panel-b">
+  const upPanel = `<section class="panel p-up" aria-labelledby="h-up"><div class="panel-h"><h2 id="h-up">Upcoming tuition</h2><a class="link" href="#/classes">All classes</a></div><div class="panel-b">
     ${up.length ? `<div class="list">${up.map(c => { const s = S.students[c.studentId]; return `<div class="li" data-act="open-class" data-id="${esc(c.id)}" data-date="${c.date}" style="cursor:pointer">${avatar(s)}<div class="li-main"><div class="li-t">${esc(s.name)}</div><div class="li-s">${esc(relDay(c.date))}, ${fmtT(c.start)}${c.subject ? ` · ${esc(c.subject)}` : ''}</div></div><span class="faint num" style="font-size:.85rem">${fmtDur(plannedMin(c))}</span></div>`; }).join('')}</div>`
-      : emptyState('🗓️', 'Nothing in the next 7 days', 'Set a weekly schedule on a student and classes appear here automatically.')}
+      : emptyState('cal', 'Nothing in the next 7 days', noStudents ? 'Upcoming classes from your students’ weekly schedules show here.' : 'Set a weekly schedule on a student and classes appear here automatically.', '', { compact: true })}
   </div></section>`;
 
   const wk = rangeFor('week'); const wt = totalsBy(timesIn(wk[0], wk[1]));
   const maxW = Math.max(1, ...Object.values(wt.by));
-  const weekPanel = `<section class="panel" aria-labelledby="h-wk"><div class="panel-h"><h2 id="h-wk">Taught this week</h2><a class="link" href="#/time">Details</a></div><div class="panel-b">
-    <div class="durpreview num" style="margin-bottom:12px">${fmtDur(wt.total)}</div>
+  const weekPanel = `<section class="panel p-week" aria-labelledby="h-wk"><div class="panel-h"><h2 id="h-wk">Taught this week</h2><a class="link" href="#/time">Details</a></div><div class="panel-b">
+    <div class="durpreview num" style="margin-bottom:${Object.keys(wt.by).length ? 12 : 4}px">${fmtDur(wt.total)}</div>
     ${Object.keys(wt.by).length ? `<div class="bars">${Object.entries(wt.by).sort((a, b) => b[1] - a[1]).map(([sid, m]) => `<div class="bar-row"><div class="n">${avatar(S.students[sid])}<span>${esc(S.students[sid]?.name)}</span></div><div class="bar"><i style="width:${(m / maxW * 100).toFixed(1)}%"></i></div><div class="v">${fmtDur(m)}</div></div>`).join('')}</div>`
-      : `<div class="muted" style="font-size:.9rem">No teaching time yet this week. Mark a class as <b>Done</b> and its start-to-end time is counted here.</div>`}
+      : `<div class="muted" style="font-size:.86rem">No teaching time yet this week. Mark a class as <b>Done</b> and its start-to-end time is counted here.</div>`}
   </div></section>`;
 
   const dues = stuList().map(s => ({ s, due: payState(s, pf.m).due })).filter(x => x.due > 0).sort((a, b) => b.due - a.due);
-  const payPanel = `<section class="panel" aria-labelledby="h-pay"><div class="panel-h"><h2 id="h-pay">Due <span class="lm lg">${esc(pmLabel)}</span></h2><a class="link" href="#/payments" data-act="pay-goto" data-month="${pf.m}">View all</a></div><div class="panel-b">
+  const payPanel = `<section class="panel p-due" aria-labelledby="h-pay"><div class="panel-h"><h2 id="h-pay">Due <span class="lm lg">${esc(pmLabel)}</span></h2><a class="link" href="#/payments" data-act="pay-goto" data-month="${pf.m}">View all</a></div><div class="panel-b">
     ${dues.length ? `<div class="list">${dues.slice(0, 6).map(x => `<div class="li">${avatar(x.s)}<div class="li-main"><div class="li-t">${esc(x.s.name)}</div><div class="li-s">of ${money(payState(x.s, pf.m).fee)} fee</div></div><span class="amt due">${money(x.due)}</span><button class="btn sm" data-act="new-payment" data-sid="${esc(x.s.id)}" data-month="${pf.m}">Record</button></div>`).join('')}</div>${dues.length > 6 ? `<div class="faint" style="font-size:.84rem;padding-top:6px">and ${dues.length - 6} more</div>` : ''}`
-      : `<div class="empty" style="padding:22px 8px"><div class="em" aria-hidden="true">✓</div><b>${pf.expected ? 'All paid' : 'Nothing due'}</b><div>${pf.expected ? `Every ${esc(pmLabel)} fee has been paid.` : `No fees were due for ${esc(pmLabel)}.`}</div></div>`}
+      : emptyState('check', pf.expected ? 'All paid' : 'Nothing due', pf.expected ? `Every ${esc(pmLabel)} fee has been paid.` : `No fees were due for ${esc(pmLabel)}.`, '', { compact: true, tone: pf.expected ? 'tui' : 'pay' })}
   </div></section>`;
 
   return topbar(`${greeting()}${nm}!`, `${fmtDate(t, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}. Here's your tuition for today.`, actions)
-    + strip + `<div class="grid-dash"><div class="stack">${todayPanel}${upPanel}</div><div class="stack">${weekPanel}${payPanel}</div></div>`;
+    + strip + `<div class="dash"><div class="col c1">${todayPanel}</div><div class="col c2">${upPanel}</div><div class="col c3">${payPanel}${weekPanel}</div></div>`;
 }
 

@@ -20,13 +20,13 @@ export function vStudents() {
   return topbar('Students', `${counts.active} active, ${counts.paused} paused, ${counts.finished} finished`, `<button class="btn stu" data-act="new-student">${ic('plus')}Add student</button>`)
     + `<div class="toolbar"><div class="search">${ic('search')}<label class="sr" for="stu-q">Search students</label><input id="stu-q" class="input" type="search" placeholder="Search by name, class or subject" value="${esc(ui.stuQ)}" data-input="stu-q"></div>
       <div class="chips" role="group" aria-label="Filter by status">${chip('active', 'Active')}${chip('paused', 'Paused')}${chip('finished', 'Finished')}${chip('all', 'All')}</div></div>`
-    + (all.length ? (list.length ? `<div class="stu-grid">${cards}</div>` : emptyState('🔍', 'No matching students', 'Try a different name or status filter.'))
-      : `<div class="panel">${emptyState('📚', 'No students yet', 'Add your first student to start managing your tuition.', `<button class="btn stu" data-act="new-student">${ic('plus')}Add student</button> <button class="btn ghost" data-act="demo-load">Try with sample data</button>`)}</div>`);
+    + (all.length ? (list.length ? `<div class="stu-grid">${cards}</div>` : emptyState('search', 'No matching students', 'Try a different name or status filter.'))
+      : `<div class="panel">${emptyState('users', 'No students yet', 'Add your first student with their weekly schedule and fee. Classes, teaching time and dues follow automatically.', `<button class="btn stu" data-act="new-student">${ic('plus')}Add student</button><button class="btn ghost" data-act="demo-load">Try with sample data</button>`, { tone: 'stu' })}</div>`);
 }
 
 export function vStudent(id) {
   const s = S.students[id];
-  if (!s) return topbar('Student not found', '') + `<div class="panel">${emptyState('🤔', 'This student no longer exists', 'They may have been deleted.', '<a class="btn" href="#/students">Back to students</a>')}</div>`;
+  if (!s) return topbar('Student not found', '') + `<div class="panel">${emptyState('warn', 'This student no longer exists', 'They may have been deleted.', '<a class="btn" href="#/students">Back to students</a>')}</div>`;
   const t = todayStr(); const cm = curMonth(); const pm = prevMonthOf(cm);
   const cmName = MONTHS[Number(cm.slice(5)) - 1];
   const hist = occurrences(historyStart(s), t, { studentId: id }).filter(c => c.date < t || c.status !== 'scheduled' || toMin(c.end) <= nowMin()).reverse();

@@ -23,16 +23,16 @@ export function scheduleRender() { if (rq) return; rq = requestAnimationFrame(()
 
 export function shell(content) {
   const r = route(); const pg = r.page === 'student' ? 'students' : r.page;
-  const nav = NAV.map(n => n ? `<a href="#/${n[0]}" data-sec="${n[3]}" ${pg === n[0] ? 'aria-current="page"' : ''}>${ic(n[1])}${n[2]}</a>` : '<hr>').join('');
+  const nav = NAV.map(n => n ? `<a href="#/${n[0]}" data-sec="${n[3]}" title="${n[2]}" ${pg === n[0] ? 'aria-current="page"' : ''}>${ic(n[1])}<span class="nl">${n[2]}</span></a>` : '<hr>').join('');
   const bn = [['', 'home', 'Home'], ['calendar', 'cal', 'Calendar'], ['students', 'users', 'Students'], ['payments', 'wallet', 'Payments']];
   const moreActive = ['classes', 'time', 'university', 'settings'].includes(pg);
   return `<div class="shell">
   <aside class="side" aria-label="Main navigation">
-    <div class="brand"><span class="brand-mark">${ic('book')}</span>Tuition Desk</div>
+    <div class="brand"><span class="brand-mark">${ic('book')}</span><span class="brand-t">Tuition Desk</span></div>
     <nav class="nav">${nav}</nav>
-    <div class="side-foot">${mode === 'local' ? 'Local preview mode' : esc(Store.user?.email || '')}${mode === 'local' ? '' : '<br><button type="button" class="btn sm ghost" data-act="sign-out" style="margin:6px 0 0 -10px">Sign out</button>'}</div>
+    <div class="side-foot">${mode === 'local' ? '<span class="who">Local preview mode</span>' : `<span class="who">${esc(Store.user?.email || '')}</span><br class="who"><button type="button" class="btn sm ghost" data-act="sign-out" title="Sign out">${ic('out', 'so-ic')}<span class="nl">Sign out</span></button>`}</div>
   </aside>
-  <main class="main" id="main" tabindex="-1">${content}</main>
+  <main class="main" id="main" tabindex="-1"><div class="page page-${r.page || 'home'}">${content}</div></main>
   <nav class="bnav" aria-label="Main navigation">${bn.map(b => `<a href="#/${b[0]}" ${pg === b[0] ? 'aria-current="page"' : ''}>${ic(b[1])}${b[2]}</a>`).join('')}
     <button type="button" data-act="more-sheet" ${moreActive ? 'aria-current="page"' : ''}>${ic('menu')}More</button></nav>
   <button class="fab" type="button" data-act="quick" aria-label="Quick add">${ic('plus')}</button>
@@ -44,7 +44,10 @@ export function banner(m) { bannerMsg = m; scheduleRender(); }
 export function topbar(title, sub, actions = '') {
   return `<header class="topbar"><div><h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="top-actions">${actions}</div></header>${bannerMsg ? `<div class="banner" role="alert">${esc(bannerMsg)}</div>` : ''}`;
 }
-export function emptyState(em, title, text, btn = '') { return `<div class="empty"><div class="em" aria-hidden="true">${em}</div><b>${title}</b><div>${text}</div>${btn}</div>`; }
+/** Empty state: an icon tile, a short title, one line of help and optional actions. `tone` picks the accent colour. */
+export function emptyState(icon, title, text, btn = '', { tone = 'tui', compact = false, extra = '' } = {}) {
+  return `<div class="empty${compact ? ' compact' : ''}" style="--e:var(--${tone}-ink);--e-soft:var(--${tone}-soft)"><div class="em" aria-hidden="true">${ic(icon)}</div><b>${title}</b><div>${text}</div>${extra}${btn ? `<div class="acts">${btn}</div>` : ''}</div>`;
+}
 
 export function render() {
   const app = $('#app');
@@ -120,6 +123,6 @@ export function bellPanel() {
       <button type="button" class="btn sm ghost" data-act="rem-read-all" ${unread ? '' : 'disabled'}>${ic('check')}Mark all as read</button>
       <button type="button" class="btn sm icon ghost pop-x" data-act="bell-close" aria-label="Close reminders" title="Close">${ic('x')}</button></div>
     <div class="pop-list">${all.length ? all.map(x => `<div class="li rem ${isReminderRead(x) ? 'read' : 'unread'}" data-act="rem-open" data-key="${esc(x.key)}" tabindex="0" role="button"><span class="ric" style="background:var(--${col[x.kind]}-soft);color:var(--${col[x.kind]}-ink)">${ic(icn[x.kind])}</span><div class="li-main"><div class="li-t">${esc(x.text)}</div><div class="li-s">${esc(x.sub)}</div></div>${isReminderRead(x) ? '' : '<span class="udot" aria-label="Unread"></span>'}</div>`).join('')
-      : `<div class="empty" style="padding:18px"><b>You're all caught up</b><div>No reminders right now.</div></div>`}</div></div>`;
+      : emptyState('check', "You're all caught up", 'No reminders right now.', '', { compact: true })}</div></div>`;
 }
 
