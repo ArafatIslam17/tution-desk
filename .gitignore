@@ -1,0 +1,18 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+test-results/
+.vercel/
+playwright-report/
+# Never commit backups or exports: they contain private student and payment data
+*backup*.json
+tuition-backup-*.json
+*.dump
+*.sql.gz

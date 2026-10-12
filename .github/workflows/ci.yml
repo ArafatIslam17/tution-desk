@@ -1,0 +1,31 @@
+name: CI
+
+# Runs on every pull request and every push (including main). Vercel deploys main;
+# a red check here means the change is not release-ready.
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Repository safety check (secrets, private data)
+        run: npm run check:repo
+      - name: Build
+        run: npm run build
+      - name: Smoke test built site
+        run: npm run smoke
